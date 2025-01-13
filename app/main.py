@@ -4,7 +4,6 @@ from app.database import Base, engine, get_db
 from app.crud import create_user, update_user, delete_user, get_audit_logs
 from app.schemas import UserCreate, UserResponse, AuditLogResponse
 
-# Initialize the database
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
