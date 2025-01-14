@@ -16,9 +16,10 @@ class UserResponse(BaseModel):
 class AuditLogResponse(BaseModel):
     id: int
     action: str
-    user_id: int
-    user_data: str
+    entity: str
+    entity_id: int
     timestamp: datetime
+    changes: str | None
 
     class Config:
         from_attributes = True

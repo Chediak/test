@@ -1,42 +1,49 @@
 from sqlalchemy.orm import Session
-from datetime import datetime
-import json
+from fastapi import HTTPException
 from app.models import User, AuditLog
+import json
 
 
 
 def log_audit(db: Session, action: str, entity: str, entity_id: int, changes: dict):
     try:
+        changes_str = json.dumps(changes) if changes else None
+        
         audit_entry = AuditLog(
             action=action,
             entity=entity,
             entity_id=entity_id,
-            timestamp=datetime.now().isoformat(),
-            changes=json.dumps(changes),
+            changes=changes_str
         )
         db.add(audit_entry)
         db.commit()
-        print("Audit log saved successfully!")
+        db.refresh(audit_entry)
+        return audit_entry
     except Exception as e:
         print(f"Error saving audit log: {e}")
         db.rollback()
+        raise
 
 
 
 def create_user(db: Session, user: dict):
-    db_user = User(name=user["name"], email=user["email"])
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
+    try:
+        db_user = User(name=user["name"], email=user["email"])
+        db.add(db_user)
+        db.commit()
+        db.refresh(db_user)
 
-    log_audit(
-        db=db,
-        action="CREATE",
-        entity="User",
-        entity_id=db_user.id,
-        changes={"name": db_user.name, "email": db_user.email}
-    )
-    return db_user
+        log_audit(
+            db=db,
+            action="CREATE",
+            entity="User",
+            entity_id=db_user.id,
+            changes={"name": db_user.name, "email": db_user.email}
+        )
+        return db_user
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 def update_user(db: Session, user_id: int, user: dict):

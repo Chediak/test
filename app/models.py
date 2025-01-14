@@ -1,7 +1,7 @@
 # models.py
 from datetime import datetime
 from pydantic import BaseModel, EmailStr
-from sqlalchemy import Column, Integer, String, Text, DateTime
+from sqlalchemy import Column, Integer, String, Text, DateTime, func
 from app.database import Base
 
 class User(Base):
@@ -17,8 +17,8 @@ class AuditLog(Base):
     action = Column(String, nullable=False)
     entity = Column(String, nullable=False)
     entity_id = Column(Integer, nullable=False)
-    timestamp = Column(String, nullable=False)
-    changes = Column(String, nullable=True)
+    timestamp = Column(DateTime, server_default=func.now(), nullable=False)
+    changes = Column(Text, nullable=True)
 
 class UserCreate(BaseModel):
     name: str
